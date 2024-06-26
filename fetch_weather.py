@@ -1,13 +1,18 @@
+import json
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+
+
+with open('config.json', 'r') as config_file:
+    config = json.load(config_file)
 
 # Your Meteomatics API credentials
 USERNAME = 'setu_aadegbola_emmanuel'
 PASSWORD = '10nf4Sq0LY'
 
 # The location for which you want to fetch weather data (latitude,longitude)
-LOCATION = '53.03,7.3' #(portloaise)
+LOCATION = '53.03,7.3'
 
 # Define the start and end dates for the weather data request
 START_DATE = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -20,12 +25,14 @@ INTERVAL = 'PT1H'
 URL = f'https://api.meteomatics.com/{START_DATE}--{END_DATE}:{INTERVAL}/t_2m:C,relative_humidity_2m:p/{LOCATION}/json'
 
 def fetch_weather_data():
-    """
-    Fetches weather data from the Meteomatics API and returns it as a pandas DataFrame.
-    """
+
+    # Fetches weather data from the Meteomatics API and returns it as a pandas DataFrame.
+    
     # Make the GET request to the Meteomatics API
     response = requests.get(URL, auth=(USERNAME, PASSWORD))
-    
+    response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+
+
     # Parse the JSON response from the API
     data = response.json()
     
@@ -53,9 +60,12 @@ def fetch_weather_data():
 if __name__ == "__main__":
     # Fetch the weather data
     df = fetch_weather_data()
-    
-    # Save the weather data to a CSV file
-    df.to_csv('weatherdata.csv', index=False)
-    
-    # Print a confirmation message
-    print("Weather data fetched and saved to weather_data.csv")
+
+    if df is not None:
+        # Save the weather data to a CSV file
+        df.to_csv('weather_data.csv', index=False)
+        
+        # Print a confirmation message
+        print("Weather data fetched and saved to weather_data.csv")
+    else:
+        print("Failed to fetch weather data")
